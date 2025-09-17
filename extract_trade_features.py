@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import sys
+import json
 
 
 # 用法: python extract_trade_features.py <csv_file_path>
@@ -24,40 +25,51 @@ def extract_features(csv_file):
     profit_col = find_col(["盈亏", "profit"], columns)
 
     # 交易总数
-    total_trades = len(df)
+    total_trades = int(len(df))
+    # 确保volume列为float类型
+    df[volume_col] = pd.to_numeric(df[volume_col], errors="coerce").fillna(0)
     # 平均持仓手数
-    avg_volume = df[volume_col].mean()
+    avg_volume = float(df[volume_col].mean())
     # 最大单笔手数
-    max_volume = df[volume_col].max()
+    max_volume = float(df[volume_col].max())
     # 手数变化序列
-    volume_changes = df[volume_col].diff().fillna(0).tolist()
+    volume_changes = [float(x) for x in df[volume_col].diff().fillna(0).tolist()]
     # 是否有加倍行为
-    double_volume = any(
-        np.isclose(df[volume_col][1:].values, 2 * df[volume_col][:-1].values)
-    )
+    try:
+        double_volume = any(
+            np.isclose(df[volume_col][1:].values, 2 * df[volume_col][:-1].values)
+        )
+    except Exception:
+        double_volume = False
     # 盈亏分布
-    total_profit = df[profit_col].sum()
-    max_profit = df[profit_col].max()
-    max_loss = df[profit_col].min()
-    win_trades = (df[profit_col] > 0).sum()
-    loss_trades = (df[profit_col] < 0).sum()
-    win_rate = win_trades / total_trades if total_trades > 0 else 0
+    df[profit_col] = pd.to_numeric(df[profit_col], errors="coerce").fillna(0)
+    total_profit = float(df[profit_col].sum())
+    max_profit = float(df[profit_col].max())
+    max_loss = float(df[profit_col].min())
+    win_trades = int((df[profit_col] > 0).sum())
+    loss_trades = int((df[profit_col] < 0).sum())
+    win_rate = float(win_trades / total_trades) if total_trades > 0 else 0.0
     # 最大连续亏损（回撤）
-    profits = df[profit_col].values
+    profits = df[profit_col].values.astype(float)
     cum_profits = np.cumsum(profits)
     drawdown = np.maximum.accumulate(cum_profits) - cum_profits
-    max_drawdown = drawdown.max()
+    max_drawdown = float(drawdown.max())
     # 持仓周期（假设时间已排序）
-    holding_periods = (
-        pd.to_datetime(df[time_col]).diff().dt.total_seconds().fillna(0).tolist()
-    )
+    holding_periods = [
+        float(x)
+        for x in pd.to_datetime(df[time_col])
+        .diff()
+        .dt.total_seconds()
+        .fillna(0)
+        .tolist()
+    ]
 
     features = {
         "total_trades": total_trades,
         "avg_volume": avg_volume,
         "max_volume": max_volume,
         "volume_changes": volume_changes,
-        "double_volume_pattern": double_volume,
+        "double_volume_pattern": bool(double_volume),
         "total_profit": total_profit,
         "max_profit": max_profit,
         "max_loss": max_loss,
@@ -70,10 +82,17 @@ def extract_features(csv_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("用法: python extract_trade_features.py <csv_file_path>")
+        print(
+            "用法: python extract_trade_features.py <csv_file_path> [output_json_path]"
+        )
         sys.exit(1)
     csv_file = sys.argv[1]
     features = extract_features(csv_file)
-    print("交易特征:")
-    for k, v in features.items():
-        print(f"{k}: {v}")
+    if len(sys.argv) >= 3:
+        output_json = sys.argv[2]
+        with open(output_json, "w", encoding="utf-8") as f:
+            json.dump(features, f, ensure_ascii=False, indent=2)
+    else:
+        print("交易特征:")
+        for k, v in features.items():
+            print(f"{k}: {v}")
