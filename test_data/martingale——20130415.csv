@@ -1,0 +1,2 @@
+broker_id,ticket,login,symbol,cmd,volume,open_time,open_price,sl,tp,close_time,reason,commission,swaps,close_price,profit,server_id
+6,42812938,6010198754,XAUAUD,0,1,1366010940,1352.07,1352.065,1352.073,1366011000,0,-0.14,-0.1,1351.99,-800.0,1

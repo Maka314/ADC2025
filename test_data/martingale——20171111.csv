@@ -1,0 +1,2 @@
+broker_id,ticket,login,symbol,cmd,volume,open_time,open_price,sl,tp,close_time,reason,commission,swaps,close_price,profit,server_id
+6,42812938,1416923681,UKXGBP,0,1,1514858460,7635.5,7635.492,7635.503,1514858520,0,-0.14,-0.1,7632.5,-30000.0,1

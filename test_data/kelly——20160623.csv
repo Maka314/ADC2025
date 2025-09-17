@@ -1,0 +1,2 @@
+broker_id,ticket,login,symbol,cmd,volume,open_time,open_price,sl,tp,close_time,reason,commission,swaps,close_price,profit,server_id
+6,59583344,9361827433,USDHKD,0,1,1466665800,7.75703,7.75103,7.76503,1481871420,1,-0.14,-0.1,7.76503,80.0,1

@@ -1,0 +1,2 @@
+broker_id,ticket,login,symbol,cmd,volume,open_time,open_price,sl,tp,close_time,reason,commission,swaps,close_price,profit,server_id
+6,42812938,7211188506,GRXEUR,0,1,1696339860,4098.069,4098.065,4098.077,1696339920,0,-0.14,-0.1,4097.049,-10200.0,1
