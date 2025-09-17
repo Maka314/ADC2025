@@ -1,11 +1,24 @@
 import backtrader as bt
 import pandas as pd
 import os
-from datetime import datetime
+import random
+from datetime import datetime, timedelta
 
-# 配置参数
-data_path = 'history_price/eurusd.csv'  # 可更换为其他品种
-output_csv = 'martingale_trades.csv'
+# 随机选取品种和参数
+def get_random_symbol_and_path():
+    folder = 'history_price'
+    files = [f for f in os.listdir(folder) if f.endswith('.csv')]
+    symbol_file = random.choice(files)
+    symbol = symbol_file.replace('.csv', '').upper()
+    return symbol, os.path.join(folder, symbol_file)
+
+def get_random_params():
+    return dict(
+        stake=random.choice([1, 2, 5]),
+        max_martingale=random.choice([3, 4, 5, 6]),
+        sl_pips=random.choice([30, 40, 50, 60, 80]),
+        tp_pips=random.choice([30, 40, 50, 60, 80]),
+    )
 
 # 读取数据
 class PandasData_Minute(bt.feeds.PandasData):
@@ -105,20 +118,52 @@ class MartingaleStrategy(bt.Strategy):
 
 # 加载数据
 if __name__ == '__main__':
+    # 确保输出文件夹存在
+    output_dir = 'martingale_tradings'
+    os.makedirs(output_dir, exist_ok=True)
+    # 随机选品种
+    symbol, data_path = get_random_symbol_and_path()
+    # 读取数据
     df = pd.read_csv(
         data_path,
         parse_dates=['time'],
         date_parser=lambda x: pd.to_datetime(x, format='%Y%m%d %H%M%S')
     )
     df.set_index('time', inplace=True)
-    # 只取最近半年的数据
+    # 随机半年区间
     if not df.empty:
-        last_time = df.index.max()
-        half_year_ago = last_time - pd.Timedelta(days=182)
-        df = df[df.index >= half_year_ago]
+        min_time = df.index.min()
+        max_time = df.index.max() - pd.Timedelta(days=182)
+        if min_time >= max_time:
+            start_time = min_time
+        else:
+            start_time = min_time + (max_time - min_time) * random.random()
+        start_time = pd.to_datetime(start_time)
+        end_time = start_time + pd.Timedelta(days=182)
+        df = df[(df.index >= start_time) & (df.index < end_time)]
+    # 随机参数
+    rand_params = get_random_params()
+    # 随机login、ticket
+    login = random.randint(1000000000, 9999999999)
+    ticket = random.randint(40000000, 49999999)
+    # 输出文件名
+    output_csv = os.path.join(output_dir, f"martingale_trades_{symbol}_{start_time.strftime('%Y%m%d')}_{ticket}.csv")
+    # 策略参数
+    strat_params = dict(
+        stake=rand_params['stake'],
+        max_martingale=rand_params['max_martingale'],
+        sl_pips=rand_params['sl_pips'],
+        tp_pips=rand_params['tp_pips'],
+        symbol=symbol,
+        login=login,
+        broker_id=6,
+        server_id=1,
+    )
     cerebro = bt.Cerebro()
     data = PandasData_Minute(dataname=df)
     cerebro.adddata(data)
-    cerebro.addstrategy(MartingaleStrategy)
+    cerebro.addstrategy(MartingaleStrategy, **strat_params)
+    # 注入ticket到策略
+    MartingaleStrategy.ticket = ticket
     cerebro.run()
     print(f'交易记录已保存到 {output_csv}')
