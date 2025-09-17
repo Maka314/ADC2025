@@ -1,0 +1,35 @@
+{
+  "total_trades": 10,
+  "avg_volume": 3.1,
+  "max_volume": 5.0,
+  "volume_changes": [
+    0.0,
+    1.0,
+    2.0,
+    -1.0,
+    1.0,
+    -2.0,
+    2.0,
+    -3.0,
+    -1.0,
+    0.0
+  ],
+  "double_volume_pattern": false,
+  "total_profit": 0.03999999999999959,
+  "max_profit": 4.88,
+  "max_loss": -6.7,
+  "win_rate": 0.7,
+  "max_drawdown": 10.96,
+  "holding_periods_seconds": [
+    0.0,
+    2.7663e-05,
+    0.000287761,
+    0.000122544,
+    1.9004e-05,
+    8.2117e-05,
+    3e-09,
+    0.000335105,
+    0.000709836,
+    0.000494987
+  ]
+}

@@ -32,7 +32,7 @@ def extract_features(file_path, output_path):
 
 
 def call_llm(feature_path):
-    """调用千问大模型API，返回分类结果（martin/kelly/other）"""
+    """调用千问大模型API, 返回分类结果(martin/kelly/other)"""
     with open(feature_path, "r") as f:
         features = f.read()
     prompt = f"你是一名资深量化交易分析师。请根据以下交易特征，判断该账户的主要交易策略属于以下哪一类，并简要说明理由： 马丁格尔策略 凯利公式策略 其他策略 交易特征如下：\n{features} \n 你只能输出: martin, kelly, other三个中的一种"
