@@ -8,7 +8,7 @@ import csv
 # ===== 千问大模型API配置 =====
 QW_API_KEY = "sk-8c6f9c9989ec4ac39f9869668a492f47"  # 在此处填写你的千问API Key
 QW_API_URL = (
-    "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"  # 千问国际站API地址
+    "https://open.bigmodel.cn/api/paas/v4/chat/completions"  # 千问国际站API地址
 )
 # ============================
 
@@ -32,24 +32,21 @@ def extract_features(file_path, output_path):
 
 
 def call_llm(feature_path):
-    """调用千问大模型API, 返回分类结果(martin/kelly/other)"""
+    """调用千问大模型API(通过 openai 库），返回分类结果(martin/kelly/other)"""
+    from openai import OpenAI
+
     with open(feature_path, "r") as f:
         features = f.read()
     prompt = f"你是一名资深量化交易分析师。请根据以下交易特征，判断该账户的主要交易策略属于以下哪一类，并简要说明理由： 马丁格尔策略 凯利公式策略 其他策略 交易特征如下：\n{features} \n 你只能输出: martin, kelly, other三个中的一种"
-    headers = {
-        "Authorization": f"Bearer {QW_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    data = {
-        "model": "qwen-plus",  # 可根据实际模型名调整
-        "messages": [{"role": "user", "content": prompt}],
-    }
     try:
-        resp = requests.post(QW_API_URL, headers=headers, json=data, timeout=30)
-        resp.raise_for_status()
-        result = resp.json()
-        answer = result["choices"][0]["message"]["content"].strip().lower()
-        # 只保留martin/kelly/other
+        client = OpenAI(
+            api_key=QW_API_KEY,
+            base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+        )
+        completion = client.chat.completions.create(
+            model="qwen-plus", messages=[{"role": "user", "content": prompt}]
+        )
+        answer = completion.choices[0].message.content.strip().lower()
         if "martin" in answer:
             return "martin"
         elif "kelly" in answer:
