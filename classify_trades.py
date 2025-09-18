@@ -37,16 +37,39 @@ def call_llm(feature_path):
 
     with open(feature_path, "r") as f:
         features = f.read()
-    prompt = f"你是一名资深量化交易分析师。请根据以下交易特征，判断该账户的主要交易策略属于以下哪一类，并简要说明理由： 马丁格尔策略 凯利公式策略 其他策略 交易特征如下：\n{features} \n 你只能输出: martin, kelly, other三个中的一种"
+    prompt = f"""
+You are a senior quantitative trading analyst. 
+Your task is to classify the trading strategy of the account.
+
+Definitions:
+- martingale: position size systematically increases (often doubles) after a loss.
+- kelly: position size is dynamically adjusted as a fraction of account equity, 
+  based on expected win probability and payoff ratio (p, q, b).
+- other: any strategy that does not clearly follow martingale or kelly.
+
+Input data (trading features in JSON):
+{features}
+
+Classification rules:
+1. Focus only on position sizing and its relationship with prior wins/losses or account edge.
+2. If positions frequently double after losses → output "martin".
+3. If positions vary smoothly in proportion to edge / equity fraction → output "kelly".
+4. If neither applies → output "other".
+
+Output format:
+Return ONLY one word: "martin", "kelly", or "other".
+Do not add explanations, reasoning, or extra text.
+"""
     try:
         client = OpenAI(
             api_key=QW_API_KEY,
             base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
         )
         completion = client.chat.completions.create(
-            model="qwen-plus", messages=[{"role": "user", "content": prompt}]
+            model="qwen-max", messages=[{"role": "user", "content": prompt}]
         )
         answer = completion.choices[0].message.content.strip().lower()
+        print(f"answer from LLM: {answer}")
         if "martin" in answer:
             return "martin"
         elif "kelly" in answer:
@@ -59,7 +82,8 @@ def call_llm(feature_path):
 
 
 def main():
-    results = []
+    output_csv = "classification_results.csv"
+    first_write = True
     for fname in os.listdir(test_data_dir):
         if not fname.endswith(".csv"):
             continue
@@ -69,16 +93,18 @@ def main():
         if extract_features(fpath, feature_path):
             label = call_llm(feature_path)
             print(f"{fname} 分类结果: {label}")
-            results.append({"file": fname, "label": label})
+            # 实时写入csv
+            write_header = False
+            if first_write:
+                write_header = True
+                first_write = False
+            with open(output_csv, "a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=["file", "label"])
+                if write_header:
+                    writer.writeheader()
+                writer.writerow({"file": fname, "label": label})
         else:
             print(f"跳过: {fname}")
-
-    output_csv = "classification_results.csv"
-    with open(output_csv, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["file", "label"])
-        writer.writeheader()
-        for row in results:
-            writer.writerow(row)
     print(f"\n所有分类结果已保存到: {output_csv}")
 
 

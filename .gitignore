@@ -5,3 +5,5 @@ login_tradings/
 history_price/
 martingale_tradings/
 kelly_tradings/
+test_data/
+test_data_features/
