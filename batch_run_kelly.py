@@ -3,7 +3,7 @@ import multiprocessing
 import time
 
 # 配置
-TOTAL_RUNS = 200
+TOTAL_RUNS = 400
 MAX_WORKERS = 12  # 并发进程数，可根据CPU调整
 PYTHON_EXEC = "/home/coder/ADC2025/.venv/bin/python"
 SCRIPT = "kelly_backtest.py"

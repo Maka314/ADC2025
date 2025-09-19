@@ -1,2 +1,0 @@
-broker_id,ticket,login,symbol,cmd,volume,open_time,open_price,sl,tp,close_time,reason,commission,swaps,close_price,profit,server_id
-6,56399138,5407098041,USDHUF,0,1,1672600500,370.31,370.305,370.316,1672600620,1,-0.14,-0.1,371.738,14280.0,1

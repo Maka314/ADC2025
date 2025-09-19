@@ -53,7 +53,8 @@ Input data (trading features in JSON):
 Classification rules:
 1. Focus only on position sizing and its relationship with prior wins/losses or account edge.
 2. If positions frequently double after losses → output "martin".
-3. If positions vary smoothly in proportion to edge / equity fraction → output "kelly".
+3. If positions show a consistent correlation with account equity, prior performance, 
+   or rolling edge estimates → output "kelly".
 4. If neither applies → output "other".
 
 Output format:
