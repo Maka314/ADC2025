@@ -1,4 +1,5 @@
 .venv/
+.env
 data/
 broker_5/
 login_tradings/
