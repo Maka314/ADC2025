@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 import json
+import io
 
 
 # 用法: python extract_trade_features.py <csv_file_path> [output_json_path]
@@ -377,11 +378,15 @@ def extract_features(csv_file):
     frac_after_3loss = mean_frac_after_run(-3)
 
     # ---- 汇总（保持原有字段 + 新字段）----
-    # 处理前10条，所有datetime类型转为字符串，避免json序列化不完整
+    # 处理前10条，所有datetime类型转为字符串，避免json序列化不完整，并以csv格式输出
     head10 = df.head(10).copy()
     for col in head10.columns:
         if np.issubdtype(head10[col].dtype, np.datetime64):
             head10[col] = head10[col].astype(str)
+
+    csv_buffer = io.StringIO()
+    head10.to_csv(csv_buffer, index=False)
+    records_head10_csv = csv_buffer.getvalue()
     features = {
         # 基础特征（原有）
         "total_trades": total_trades,
@@ -422,8 +427,8 @@ def extract_features(csv_file):
         "corr_volume_with_prior_equity": corr_volume_with_prior_equity,
         # 参考（原有）
         "volume_autocorr_lag1": volume_autocorr_lag1,
-        # 新增：前十条原始交易记录（所有datetime已转str）
-        "records_head10": head10.to_dict(orient="records"),
+        # 新增：前十条原始交易记录（csv格式字符串）
+        "records_head10": records_head10_csv,
     }
 
     # 新增：多窗口“仓位 vs 滚动优势”的相关性（线性/秩）
