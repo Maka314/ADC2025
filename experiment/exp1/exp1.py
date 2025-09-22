@@ -27,9 +27,9 @@ def normalize_label(label):
         return label
 
 
-def io_llm(client, features):
+def io_llm(client, features, module_name):
     completion = client.chat.completions.create(
-        model="qwen-plus",
+        model=module_name,
         messages=[
             {
                 "role": "user",
@@ -107,7 +107,7 @@ if __name__ == "__main__":
             print(f"开始处理类别{category}")
             for item in tqdm(categories[category], desc=f"Processing {category}"):
                 features = item["features"]
-                res = io_llm(client, features)
+                res = io_llm(client, features, module_name)
                 res = normalize_label(res)
                 item["llm_result"] = res
                 print(f"文件{item['filename']}的分类结果是: {res}")
