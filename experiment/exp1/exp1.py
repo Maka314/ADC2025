@@ -1,3 +1,18 @@
+import sys, os
+
+# 自动将项目根目录加入 sys.path，确保可以 import experiment.extract_trade_features
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from experiment.extract_trade_features import extract_features
+import os
+from collections import defaultdict
+import json
+from tqdm import tqdm
+import openai
+import time
+import csv
+
+
 def normalize_label(label):
     label = str(label).strip().lower()
     if label in ["martin", "martingale"]:
@@ -10,19 +25,6 @@ def normalize_label(label):
         return "login"
     else:
         return label
-
-
-import sys, os
-
-# 自动将项目根目录加入 sys.path，确保可以 import experiment.extract_trade_features
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-
-from experiment.extract_trade_features import extract_features
-import os
-from collections import defaultdict
-import json
-from tqdm import tqdm
-import openai
 
 
 def io_llm(client, features):
@@ -123,3 +125,16 @@ if __name__ == "__main__":
                 str(confusion_matrix[true_label][pred_label]) for pred_label in labels
             ]
             print(f"{true_label}\t" + "\t".join(row))
+
+        # 保存混淆矩阵到csv
+        ts = int(time.time())
+        csv_filename = f"res_{ts}.csv"
+        with open(csv_filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["true_label"] + labels)
+            for true_label in labels:
+                row = [
+                    confusion_matrix[true_label][pred_label] for pred_label in labels
+                ]
+                writer.writerow([true_label] + row)
+        print(f"混淆矩阵已保存到: {csv_filename}")
