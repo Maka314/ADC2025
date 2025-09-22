@@ -7,6 +7,9 @@ import io
 
 # 用法: python extract_trade_features.py <csv_file_path> [output_json_path]
 def extract_features(csv_file):
+    import warnings
+
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
     df = pd.read_csv(csv_file)
     # 假设列名包含: 时间,方向,手数,盈亏（兼容英文）
     columns = df.columns.str.lower()
@@ -174,12 +177,16 @@ def extract_features(csv_file):
     vol_frac_of_equity = vol_frac_of_equity.replace([np.inf, -np.inf], np.nan)
 
     # ---- 相关性工具 ----
+    import warnings
+
     def safe_corr(a: pd.Series, b: pd.Series, method="pearson"):
         valid = a.notna() & b.notna()
         if valid.sum() < 10:
             return np.nan
         try:
-            return float(a[valid].corr(b[valid], method=method))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                return float(a[valid].corr(b[valid], method=method))
         except Exception:
             return np.nan
 
@@ -241,7 +248,11 @@ def extract_features(csv_file):
     def mean_ratio(a, b, eps=1e-9):
         a = pd.to_numeric(a, errors="coerce")
         b = pd.to_numeric(b, errors="coerce")
-        v = (a / (b.replace(0, np.nan) + eps)).dropna()
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            v = (a / (b.replace(0, np.nan) + eps)).dropna()
         return float(v.mean()) if len(v) >= 5 else np.nan
 
     avg_vol_after_win = (
@@ -319,7 +330,11 @@ def extract_features(csv_file):
         denom = (xv**2).sum()
         if denom <= 0:
             return np.nan
-        return float((xv * yv).sum() / denom)
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            return float((xv * yv).sum() / denom)
 
     kelly_alignment = {}
     kelly_beta = {}
