@@ -1,3 +1,17 @@
+def normalize_label(label):
+    label = str(label).strip().lower()
+    if label in ["martin", "martingale"]:
+        return "martin"
+    elif label == "kelly":
+        return "kelly"
+    elif label == "other":
+        return "other"
+    elif label == "login":
+        return "login"
+    else:
+        return label
+
+
 import sys, os
 
 # 自动将项目根目录加入 sys.path，确保可以 import experiment.extract_trade_features
@@ -11,12 +25,35 @@ from tqdm import tqdm
 import openai
 
 
-def io_llm(client, messages):
+def io_llm(client, features):
     completion = client.chat.completions.create(
         model="qwen-plus",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": messages},
+            {
+                "role": "user",
+                "content": f"""You are a senior quantitative trading analyst. 
+Your task is to classify the trading strategy of the account.
+
+Definitions:
+- martingale: position size systematically increases (often doubles) after a loss.
+- kelly: position size is dynamically adjusted as a fraction of account equity, 
+  based on expected win probability and payoff ratio (p, q, b).
+- other: any strategy that does not clearly follow martingale or kelly.
+
+Input data (trading features in JSON):
+{features}
+
+Classification rules:
+1. Focus only on position sizing and its relationship with prior wins/losses or account edge.
+2. If positions frequently double after losses → output "martin".
+3. If positions show a consistent correlation with account equity, prior performance, 
+   or rolling edge estimates → output "kelly".
+4. If neither applies → output "other".
+
+Output format:
+Return ONLY one word: "martin", "kelly", or "other".
+Do not add explanations, reasoning, or extra text.""",
+            },
         ],
     )
     # 提取 message.content
@@ -37,14 +74,16 @@ if __name__ == "__main__":
     test_data_dir = os.path.join(os.path.dirname(__file__), "../test_data")
     files = os.listdir(test_data_dir)
 
-    # categories = defaultdict(list)
-    # for filename in tqdm(files, desc="Extracting features"):
-    #     if os.path.isfile(os.path.join(test_data_dir, filename)):
-    #         # 分类依据为文件名中第一个'-'之前的字符串
-    #         category = filename.split(sep="—")[0]
-    #         file_path = os.path.join(test_data_dir, filename)
-    #         features = extract_features(file_path)
-    #         categories[category].append({"filename": filename, "features": features})
+    categories = defaultdict(list)
+    for filename in tqdm(files, desc="Extracting features"):
+        if os.path.isfile(os.path.join(test_data_dir, filename)):
+            # 分类依据为文件名中第一个'-'之前的字符串
+            category = filename.split(sep="—")[0]
+            file_path = os.path.join(test_data_dir, filename)
+            features = extract_features(file_path)
+            categories[category].append({"filename": filename, "features": features})
+
+    # print(categories["kelly"][0]["features"])
 
     for module in experiment_models_list:
         module_name, module_key, module_url = (
@@ -52,11 +91,35 @@ if __name__ == "__main__":
             module["apikey"],
             module["baseurl"],
         )
+        print(f"开始处理模型{module_name}")
 
         client = openai.OpenAI(
             api_key=module_key,
             base_url=module_url,
         )
 
-        res = io_llm(client, "你好")
-        print(f"out put from llm is: {res}")
+        # 初始化混淆矩阵
+        confusion_matrix = defaultdict(lambda: defaultdict(int))
+
+        for category in categories:
+            print(f"开始处理类别{category}")
+            for item in tqdm(categories[category], desc=f"Processing {category}"):
+                features = item["features"]
+                res = io_llm(client, features)
+                res = normalize_label(res)
+                item["llm_result"] = res
+                print(f"文件{item['filename']}的分类结果是: {res}")
+                # 更新混淆矩阵
+                confusion_matrix[category][res] += 1
+
+        # 打印混淆矩阵
+        print("混淆矩阵：")
+        labels = sorted(
+            confusion_matrix.keys() | {k for v in confusion_matrix.values() for k in v}
+        )
+        print("\t" + "\t".join(labels))
+        for true_label in labels:
+            row = [
+                str(confusion_matrix[true_label][pred_label]) for pred_label in labels
+            ]
+            print(f"{true_label}\t" + "\t".join(row))
