@@ -1,4 +1,14 @@
 import os
+from pathlib import Path
+
+# 自动加载.env.aws环境变量
+env_path = Path(__file__).parent / ".env.aws"
+if env_path.exists():
+    with open(env_path) as f:
+        for line in f:
+            if line.strip() and not line.strip().startswith('#'):
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
 import subprocess
 import json
 import sys
@@ -33,7 +43,7 @@ def extract_features(file_path, output_path):
 
 def call_llm(feature_path):
     """调用千问大模型API(通过 openai 库），返回分类结果(martin/kelly/other)"""
-    from openai import OpenAI
+    import openai
 
     with open(feature_path, "r") as f:
         features = f.read()
@@ -61,27 +71,51 @@ Output format:
 Return ONLY one word: "martin", "kelly", or "other".
 Do not add explanations, reasoning, or extra text.
 """
-    try:
-        client = OpenAI(
-            api_key=QW_API_KEY,
-            base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-        )
-        completion = client.chat.completions.create(
-            model="qwen-max", messages=[{"role": "user", "content": prompt}]
-        )
-        answer = completion.choices[0].message.content.strip().lower()
-        print(f"answer from LLM: {answer}")
-        if "martin" in answer:
-            return "martin"
-        elif "kelly" in answer:
-            return "kelly"
-        else:
+    import boto3
+    # 选择Bedrock模型
+    bedrock_model_id = 'anthropic.claude-3-sonnet-20240229-v1:0'
+    import time
+    import botocore
+    max_retries = 6
+    base_delay = 2
+    for attempt in range(max_retries):
+        try:
+            bedrock = boto3.client("bedrock-runtime")
+            body = {
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 128,
+                "temperature": 0.0,
+                "anthropic_version": "bedrock-2023-05-31"
+            }
+            response = bedrock.invoke_model(
+                modelId=bedrock_model_id,
+                body=json.dumps(body),
+                accept="application/json",
+                contentType="application/json"
+            )
+            result = json.loads(response["body"].read())
+            answer = result["content"][0]["text"].strip().lower() if "content" in result and result["content"] else ""
+            print(f"answer from LLM: {answer}")
+            if "martin" in answer:
+                return "martin"
+            elif "kelly" in answer:
+                return "kelly"
+            else:
+                return "other"
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'ThrottlingException' and attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)
+                print(f"ThrottlingException: 第{attempt+1}次重试，等待{delay}秒...")
+                time.sleep(delay)
+                continue
+            else:
+                print(f"Bedrock API调用失败: {e}")
+                return "other"
+        except Exception as e:
+            print(f"Bedrock API调用失败: {e}")
             return "other"
-    except Exception as e:
-        print(f"千问API调用失败: {e}")
-        return "other"
-
-
 def main():
     output_csv = "classification_results.csv"
     first_write = True
@@ -107,7 +141,6 @@ def main():
         else:
             print(f"跳过: {fname}")
     print(f"\n所有分类结果已保存到: {output_csv}")
-
 
 if __name__ == "__main__":
     main()
