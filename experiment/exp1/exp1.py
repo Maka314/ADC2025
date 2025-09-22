@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
         # 保存混淆矩阵到csv
         ts = int(time.time())
-        csv_filename = f"res_{ts}.csv"
+        csv_filename = f"res_{module_name}_{ts}.csv"
         with open(csv_filename, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(["true_label"] + labels)
