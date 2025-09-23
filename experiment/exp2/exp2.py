@@ -55,9 +55,59 @@ Do not add explanations, reasoning, or extra text.
 
 [Example #1]
 Input data (trading features in JSON):
-
+  "double_volume_pattern": true,
+  "prob_vol_increase_after_loss": 1.0,
+  "vol_change_after_loss_mean": 3.5384615384615383,
+  "vol_change_after_win_mean": -4.088888888888889,
+  "avg_volume_after_loss": 7.076923076923077,
+  "avg_volume_after_win": 1.0,
+  "corr_volume_with_prior_equity": -0.6214660904677295,
+  "max_volume": 64.0,
+  "avg_volume": 4.224489795918367,
+  "volume_autocorr_lag1": 0.3966721771460785,
+  "volume_changes_std": 8.999427244088897,
+  "volume_changes_max": 32.0,
+  "volume_changes_min": -63.0
 Output:
 martin
+
+[Example #2]
+Input data (trading features in JSON):
+  "corr_volume_with_prior_equity": 0.7320227321444991,
+  "kelly_corr_frac_prior_equity": -0.4811377830865866,
+  "avg_volume_after_win": 4.93345,
+  "avg_volume_after_loss": 3.3077750000000004,
+  "vol_change_after_win_mean": 0.44708333333333333,
+  "vol_change_after_loss_mean": -1.428275,
+  "prob_vol_increase_after_win": 0.5,
+  "prob_vol_increase_after_loss": 0.0,
+  "volume_autocorr_lag1": 0.27647047104330175,
+  "volume_abs_change_mean": 0.83956,
+  "volume_roll_std_w10_mean": 0.6838174752730113,
+  "volume_roll_std_w20_mean": 0.742501667979417
+  "kelly_b": 0.6904482123879632,
+  "kelly_f_star": -0.11287934025916735,
+  "kelly_f_star_clipped": 0.0,
+Output:
+kelly
+
+[Example #3]
+Input data (trading features in JSON):
+  "double_volume_pattern": false,
+  "prob_vol_increase_after_loss": 0.125,
+  "vol_change_after_loss_mean": -0.125,
+  "kelly_f_star": -3.4324932071582497,
+  "kelly_f_star_clipped": 0.0,
+  "corr_volume_with_prior_equity": -0.19268630649524732,
+  "kelly_corr_frac_prior_equity": 0.6368354430457173,
+  "volume_changes_std": 16.37266327034495,
+  "volume_roll_std_w20_mean": 13.491714833775392,
+  "avg_volume_after_win": 6.0,
+  "avg_volume_after_loss": 20.5,
+  "profit_factor": 0.10076092292587138,
+  "expectancy_per_trade": -5.636153846153847
+Output:
+other
 
 Input data (trading features in JSON):
 {features}""",
