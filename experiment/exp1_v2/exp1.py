@@ -28,12 +28,14 @@ def normalize_label(label):
 
 
 def io_llm(client, features, module_name):
-    completion = client.chat.completions.create(
-        model=module_name,
-        messages=[
-            {
-                "role": "user",
-                "content": f"""You are a senior quantitative trading analyst. 
+    while True:
+        try:
+            completion = client.chat.completions.create(
+                model=module_name,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"""You are a senior quantitative trading analyst. 
 Your task is to classify the trading strategy of the account.
 
 Definitions:
@@ -55,12 +57,27 @@ Classification rules:
 Output format:
 Return ONLY one word: "martin", "kelly", or "other".
 Do not add explanations, reasoning, or extra text.""",
-            },
-        ],
-    )
-    # 提取 message.content
-    content = completion.choices[0].message.content
-    return content
+                    },
+                ],
+            )
+            # 提取 message.content
+            content = completion.choices[0].message.content
+            return content
+        except openai.RateLimitError as e:
+            # 获取建议等待时间，否则默认2秒
+            import re
+            import time
+
+            msg = str(e)
+            wait_time = 2
+            match = re.search(r"try again in ([0-9.]+)s", msg)
+            if match:
+                wait_time = float(match.group(1)) + 0.5  # 稍微多等一点
+            print(f"RateLimitError: 等待{wait_time}秒后重试...")
+            time.sleep(wait_time)
+        except Exception as e:
+            print(f"LLM调用异常: {e}")
+            raise
 
 
 # 这个实验的主要目的是通过zero shot测试, 确认模型对于马丁格尔凯莉和其他交易策略的识别能力
@@ -72,7 +89,7 @@ modules_json_path = os.path.join(
 with open(modules_json_path, "r", encoding="utf-8") as f:
     experiment_models_list = json.load(f)  # modules are important
 
-# experiment_models_list = experiment_models_list[0:1]
+experiment_models_list = experiment_models_list[-1:]
 
 if __name__ == "__main__":
     test_data_dir = os.path.join(os.path.dirname(__file__), "../test_data")
