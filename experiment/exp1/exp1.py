@@ -126,9 +126,11 @@ if __name__ == "__main__":
             ]
             print(f"{true_label}\t" + "\t".join(row))
 
-        # 保存混淆矩阵到csv
+        # 保存混淆矩阵到csv（保存到和 py 文件相同的文件夹）
         ts = int(time.time())
-        csv_filename = f"res_{module_name}_{ts}.csv"
+        csv_filename = os.path.join(
+            os.path.dirname(__file__), f"res_{module_name}_{ts}.csv"
+        )
         with open(csv_filename, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(["true_label"] + labels)
