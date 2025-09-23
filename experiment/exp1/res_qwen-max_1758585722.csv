@@ -1,6 +1,5 @@
-true_label,kelly,login,martin,martingale,other
-kelly,127,0,16,0,53
-login,16,0,20,0,162
-martin,0,0,0,0,0
-martingale,0,0,177,0,22
-other,0,0,0,0,0
+| 实际 \ 预测        | kelly | martingale | other |
+| -------------- | ----: | ---------: | ----: |
+| **kelly**      |   127 |         16 |    53 |
+| **martingale** |     0 |        177 |    22 |
+| **other**      |    16 |         20 |   162 |

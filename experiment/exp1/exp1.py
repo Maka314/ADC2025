@@ -72,6 +72,8 @@ modules_json_path = os.path.join(
 with open(modules_json_path, "r", encoding="utf-8") as f:
     experiment_models_list = json.load(f)  # modules are important
 
+experiment_models_list = experiment_models_list[0:1]
+
 if __name__ == "__main__":
     test_data_dir = os.path.join(os.path.dirname(__file__), "../test_data")
     files = os.listdir(test_data_dir)

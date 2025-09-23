@@ -1,5 +1,10 @@
 [
   {
+    "model_name": "gpt-4o",
+    "apikey": "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",
+    "baseurl": "https://api.openai.com/v1"
+  },
+  {
     "model_name": "qwen-max",
     "apikey": "sk-c16d582f7e154fdeaa80448dcc7833bf",
     "baseurl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
@@ -10,7 +15,7 @@
     "baseurl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
   },
   {
-    "model_name": "qwen3-32b",
+    "model_name": "qwen-turbo",
     "apikey": "sk-c16d582f7e154fdeaa80448dcc7833bf",
     "baseurl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
   }
