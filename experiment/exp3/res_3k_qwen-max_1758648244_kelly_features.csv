@@ -1,0 +1,5 @@
+| true\_label    | kelly | martingale | other |
+| -------------- | ----- | ---------- | ----- |
+| **kelly**      | 173   | 22         | 1     |
+| **martingale** | 0     | 172        | 27    |
+| **other**      | 0     | 18         | 180   |
